@@ -177,12 +177,12 @@
             // 2. Inisialisasi jsPDF
             const doc = new jsPDF('p', 'mm', 'a4'); 
             const pageWidth = doc.internal.pageSize.getWidth(); // 210 mm
-            const pageHeight = doc.internal.pageSize.getHeight(); // 297 mm
+            const pageHeight = doc.internal.pageSize.getHeight(); // 330 mm
 
             // 3. Tentukan Dimensi dan Posisi (Meniru Contoh Hasil.pdf)
             const photoWidth = 20; 
             const photoHeight = 30; 
-            const startY = pageHeight - photoHeight - 45; // 43mm dari bawah
+            const startY = pageHeight - photoHeight - 45; // 45mm dari bawah
             const spacing = 12; 
             const totalWidth = (photoWidth * 2) + spacing;
             const marginX = (pageWidth - totalWidth) / 2; // Margin agar di tengah
