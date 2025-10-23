@@ -175,7 +175,7 @@
 
 
             // 2. Inisialisasi jsPDF
-            const doc = new jsPDF('p', 'mm', 'a4'); 
+            const doc = new jsPDF('p', 'mm', [210,330]); 
             const pageWidth = doc.internal.pageSize.getWidth(); // 210 mm
             const pageHeight = doc.internal.pageSize.getHeight(); // 330 mm
 
@@ -185,7 +185,7 @@
             const startY = pageHeight - photoHeight - 48; // 48mm dari bawah
             const spacing = 12; 
             const totalWidth = (photoWidth * 2) + spacing;
-            const marginX = (pageWidth - totalWidth) / 2; // Margin agar di tengah
+            const marginX = ((pageWidth - totalWidth) / 2) + 5; // Margin agar di tengah
 
             const imgTypeLaki = fileLaki.type.split('/')[1].toUpperCase();
             const imgTypePerempuan = filePerempuan.type.split('/')[1].toUpperCase();
