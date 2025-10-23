@@ -182,10 +182,10 @@
             // 3. Tentukan Dimensi dan Posisi (Meniru Contoh Hasil.pdf)
             const photoWidth = 40; 
             const photoHeight = 60; 
-            const startY = pageHeight - photoHeight - 55; // 55mm dari bawah
+            const startY = pageHeight - photoHeight - 65; // 65mm dari bawah
             const spacing = 12; 
             const totalWidth = (photoWidth * 2) + spacing;
-            const marginX = ((pageWidth - totalWidth) / 2) + 5; // Margin agar di tengah
+            const marginX = ((pageWidth - totalWidth) / 2) - 5; // Margin agar di tengah
 
             const imgTypeLaki = fileLaki.type.split('/')[1].toUpperCase();
             const imgTypePerempuan = filePerempuan.type.split('/')[1].toUpperCase();
