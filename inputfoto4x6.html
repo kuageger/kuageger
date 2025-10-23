@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Foto Calon Pengantin</title>
+    <style>
+        /* --- CSS Anda yang Sudah Ada --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-group input[type="file"] {
+            padding: 3px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+        .btn-back {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+        /* --- Akhir CSS Anda --- */
+    </style>
+</head>
+<body>
+
+    <a href="Fotobar.html" class="btn-back">&lt; Kembali ke Dashboard</a>
+
+    <div class="container">
+        <h2>Form Input Foto Calon Pengantin (Catin)</h2>
+        <form id="catinForm" action="#" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-group">
+                <label for="nama_catin_laki">Nama Catin Laki-laki:</label>
+                <input type="text" id="nama_catin_laki" name="nama_catin_laki" required> 
+            </div>
+
+            <div class="form-group">
+                <label for="nama_catin_perempuan">Nama Catin Perempuan:</label>
+                <input type="text" id="nama_catin_perempuan" name="nama_catin_perempuan" required>
+            </div>
+
+            <div class="form-group">
+                <label for="foto_catin_laki">Upload Foto Catin Laki-laki (Format 4x6):</label>
+                <input type="file" id="foto_catin_laki" name="foto_catin_laki" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label for="foto_catin_perempuan">Upload Foto Catin Perempuan (Format 4x6):</label>
+                <input type="file" id="foto_catin_perempuan" name="foto_catin_perempuan" accept="image/*" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Simpan Data & Upload Foto</button>
+
+        </form>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    const { jsPDF } = window.jspdf;
+
+    // Kualitas kompresi: Nilai antara 0.0 (terburuk/terkecil) hingga 1.0 (terbaik/terbesar).
+    // Nilai 0.6 (60%) adalah titik awal yang baik untuk mencapai < 200KB.
+    const COMPRESSION_QUALITY = 0.3; 
+
+    // Fungsi untuk mengkonversi gambar ke format Data URL yang lebih kecil (Kompresi Canvas)
+    function compressImage(dataUrl, fileType, quality) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                // Atur dimensi canvas agar proporsional
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                // Gunakan toDataURL untuk kompresi, sangat efektif untuk JPEG
+                if (fileType.includes('jpeg') || fileType.includes('jpg')) {
+                    // Kompresi kualitas untuk JPEG
+                    resolve(canvas.toDataURL('image/jpeg', quality)); 
+                } else if (fileType.includes('png')) {
+                    // PNG dikembalikan tanpa kompresi kualitas karena formatnya lossless, 
+                    // namun ukuran pixel tetap dikontrol oleh dimensi canvas (di sini sama dengan input)
+                    resolve(canvas.toDataURL('image/png'));
+                } else {
+                    resolve(dataUrl); 
+                }
+            };
+            img.onerror = reject;
+            img.src = dataUrl;
+        });
+    }
+
+    // Helper untuk mendapatkan Data URL dari file mentah
+    const getFileDataUrl = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
+        });
+    };
+
+    document.getElementById('catinForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        const namaLaki = document.getElementById('nama_catin_laki').value.trim();
+        const namaPerempuan = document.getElementById('nama_catin_perempuan').value.trim();
+        const fileLaki = document.getElementById('foto_catin_laki').files[0];
+        const filePerempuan = document.getElementById('foto_catin_perempuan').files[0];
+        
+        const isImage = (file) => file && file.type.startsWith('image/');
+        if (!isImage(fileLaki) || !isImage(filePerempuan) || !namaLaki || !namaPerempuan) {
+            alert('Mohon lengkapi semua data dan pastikan file yang diupload adalah Gambar.');
+            return; 
+        }
+
+        try {
+            // 1. Baca dan Kompresi Gambar
+            const rawDataUrlLaki = await getFileDataUrl(fileLaki);
+            const dataUrlLaki = await compressImage(rawDataUrlLaki, fileLaki.type, COMPRESSION_QUALITY);
+            
+            const rawDataUrlPerempuan = await getFileDataUrl(filePerempuan);
+            const dataUrlPerempuan = await compressImage(rawDataUrlPerempuan, filePerempuan.type, COMPRESSION_QUALITY);
+
+
+            // 2. Inisialisasi jsPDF
+            const doc = new jsPDF('p', 'mm', 'a4'); 
+            const pageWidth = doc.internal.pageSize.getWidth(); // 210 mm
+            const pageHeight = doc.internal.pageSize.getHeight(); // 330 mm
+
+            // 3. Tentukan Dimensi dan Posisi (Meniru Contoh Hasil.pdf)
+            const photoWidth = 40; 
+            const photoHeight = 60; 
+            const startY = pageHeight - photoHeight - 45; // 45mm dari bawah
+            const spacing = 12; 
+            const totalWidth = (photoWidth * 2) + spacing;
+            const marginX = (pageWidth - totalWidth) / 2; // Margin agar di tengah
+
+            const imgTypeLaki = fileLaki.type.split('/')[1].toUpperCase();
+            const imgTypePerempuan = filePerempuan.type.split('/')[1].toUpperCase();
+            
+            // 4. Tambahkan Foto ke PDF
+            // Foto Laki-laki (Kiri)
+            doc.addImage(dataUrlLaki, imgTypeLaki, marginX, startY, photoWidth, photoHeight);
+
+            // Foto Perempuan (Kanan)
+            const xPerempuan = marginX + photoWidth + spacing;
+            doc.addImage(dataUrlPerempuan, imgTypePerempuan, xPerempuan, startY, photoWidth, photoHeight);
+
+            // 5. Atur Nama File dan Simpan ke Local Storage
+            const safeNamaLaki = namaLaki.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+            const safeNamaPerempuan = namaPerempuan.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+            const fileName = `${safeNamaLaki}_${safeNamaPerempuan}.pdf`;
+            
+            // Simpan data pendaftaran ke Local Storage
+            const newData = {
+                nama_laki: namaLaki,
+                nama_perempuan: namaPerempuan,
+                filename: fileName, 
+                created_at: new Date().toISOString()
+            };
+            const storedData = localStorage.getItem('fotoRegisterData');
+            let dataArray = storedData ? JSON.parse(storedData) : [];
+            dataArray.push(newData);
+            localStorage.setItem('fotoRegisterData', JSON.stringify(dataArray));
+
+            // Unduh PDF
+            doc.save(fileName);
+
+            alert(`Data Calon Pengantin Berhasil Disimpan dan File PDF "${fileName}" berhasil diunduh!`);
+            
+            // 6. Arahkan kembali ke halaman daftar (Fotobar.html)
+            window.location.href = 'Fotobar.html'; 
+
+        } catch (error) {
+            console.error('Terjadi kesalahan saat membuat PDF:', error);
+            alert('Gagal membuat file PDF. Coba gunakan gambar dengan resolusi lebih rendah atau ganti nilai COMPRESSION_QUALITY.');
+        }
+    });
+</script>
+</body>
+</html>
